@@ -6,20 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Human Centered Design</title>
     <link rel="stylesheet" href="styles/style.css">
-    
+
 </head>
 
 <body>
 
-    
+
     <div id="controls">
         <input type="text" id="textveld" placeholder="Tekst...">
-        <button onclick="verwijderLaatste()">←</button>
-        <button onclick="verstuurTekst()">Verstuur</button>
+        <div id="buttons">
+            <button onclick="wisselPatroon()">Leestekens/Cijfers</button>
+            <button onclick="toggleCaps()" id="capsBtn">Caps: Uit</button>
+            <button onclick="verstuurTekst()">Verstuur</button>
+            <button onclick="verwijderLaatste()">← backspace</button>
+        </div>
       </div>
-      <canvas id="tekenCanvas"></canvas>
-
-
+    
+      <div id="canvasContainer">
+        <canvas id="tekenCanvas"></canvas>
+      </div>
 
 
     <script src="script.js"></script>
