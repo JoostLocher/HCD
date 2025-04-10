@@ -29,16 +29,18 @@
     }
 
     #buttons {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
       gap: 10px;
-      justify-content: center;
+      justify-items: center;
     }
 
     button {
       font-size: 32px;
       padding: 16px 32px;
       cursor: pointer;
-      width: 20em;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     #canvasContainer {
@@ -63,8 +65,10 @@
   <div id="controls">
     <input type="text" id="textveld" placeholder="Tekst...">
     <div id="buttons">
-      <button onclick="verwijderLaatste()">←</button>
-      <button onclick="verstuurTekst()">Verstuur</button>
+        <button onclick="wisselPatroon()">Leestekens/Cijfers</button>
+        <button onclick="toggleCaps()" id="capsBtn">Caps: Uit</button>
+        <button onclick="verstuurTekst()">Verstuur</button>
+        <button onclick="verwijderLaatste()">← backspace</button>
     </div>
   </div>
 
@@ -76,6 +80,7 @@
     const canvas = document.getElementById('tekenCanvas');
     const ctx = canvas.getContext('2d');
     const textveld = document.getElementById('textveld');
+    const capsBtn = document.getElementById('capsBtn');
 
     let tekenen = false;
     let sectionWidth, sectionHeight;
@@ -85,13 +90,60 @@
     let letterToegevoegd = false;
     let hasMoved = false;
     let recentTouch = false;
+    let huidigPatroonMap = 'letters';
+    let capsAan = false;
 
-    const patroonMap = {
+    const patroonMapLetters = {
       '4': 'e', '2': 'n', '6': 'a', '8': 't', '1': 'i', '3': 'r', '9': 'o', '7': 'd',
       '23': 's', '21': 'l', '41': 'g', '47': 'v', '63': 'h', '69': 'k', '89': 'm', '87': 'u',
       '12': 'b', '14': 'j', '32': 'z', '36': 'p', '96': 'c', '98': 'f', '78': 'w', '74': 'x',
-      '45': 'y', '65': 'q', '5': ' ', '52': '?', '56': '.', '58': '!', '54': ','
+      '45': 'y', '65': 'q', '5': ' ', '56': '.', '54': ',', '52': '?', '58': '!'
     };
+
+    const patroonMapSymbolen = {
+    '1': '1', '2': '2', '3': '3',
+    '4': '4', '5': '5', '6': '6',
+    '7': '7', '8': '8', '9': '9',
+    '12': '0',
+    '14': '@',
+    '21': '(',
+    '23': ')',
+    '25': '[',
+    '32': '+',
+    '36': '-',
+    '41': ':',
+    '45': '"',
+    '47': ';',
+    '52': '?',
+    '54': ',',
+    '56': '.',
+    '58': '!',
+    '63': '&',
+    '65': "'",
+    '69': '#',
+    '74': '%',
+    '78': '/', 
+    '87': '{',
+    '89': '}',
+    '85': ']',
+    '96': '=',
+    '98': '\\'
+    };
+
+    function huidigeMap() {
+      return huidigPatroonMap === 'letters' ? patroonMapLetters : patroonMapSymbolen;
+    }
+
+    function wisselPatroon() {
+      huidigPatroonMap = huidigPatroonMap === 'letters' ? 'symbolen' : 'letters';
+      drawGrid();
+    }
+
+    function toggleCaps() {
+      capsAan = !capsAan;
+      capsBtn.innerText = 'Caps: ' + (capsAan ? 'Aan' : 'Uit');
+      drawGrid();
+    }
 
     function verstuurTekst() {
       alert("Verzonden: " + textveld.value);
@@ -157,14 +209,14 @@
     }
 
     function drawLetters() {
-      const vakLetters = {
-        1: [], 2: [], 3: [],
-        4: [], 5: [], 6: [],
-        7: [], 8: [], 9: []
-      };
+      const map = huidigeMap();
+      const vakLetters = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [] };
 
-      for (const code in patroonMap) {
-        const letter = patroonMap[code];
+      for (const code in map) {
+        let letter = map[code];
+        if (capsAan && /^[a-z]$/.test(letter)) {
+          letter = letter.toUpperCase();
+        }
         const displayChar = (letter === ' ') ? '␣' : letter;
         const startVak = parseInt(code[0]);
         let offset = { x: 0, y: 0 };
@@ -233,9 +285,13 @@
         lastIndex = index;
 
         const liveCode = pathSequence.slice(-2).join('');
-        const liveLetter = patroonMap[liveCode];
+        const map = huidigeMap();
+        let liveLetter = map[liveCode];
 
         if (liveLetter) {
+          if (capsAan && /^[a-z]$/.test(liveLetter)) {
+            liveLetter = liveLetter.toUpperCase();
+          }
           const huidig = textveld.value;
           if (laatsteLetter) {
             textveld.value = huidig.slice(0, -1);
@@ -260,8 +316,12 @@
           code = pathSequence.slice(-2).join('');
         }
 
-        const letter = patroonMap[code];
+        const map = huidigeMap();
+        let letter = map[code];
         if (letter) {
+          if (capsAan && /^[a-z]$/.test(letter)) {
+            letter = letter.toUpperCase();
+          }
           textveld.value += letter;
         }
       }
@@ -289,7 +349,6 @@
     canvas.addEventListener('touchstart', (e) => {
       recentTouch = true;
       setTimeout(() => recentTouch = false, 500);
-
       const touch = e.touches[0];
       const pos = getCanvasPos(touch);
       beginTekenen(pos.x, pos.y);
@@ -303,7 +362,6 @@
     });
 
     canvas.addEventListener('touchend', stopTekenen);
-
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
   </script>
