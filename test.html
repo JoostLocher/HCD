@@ -22,7 +22,7 @@
     }
 
     #textveld {
-      font-size: 24px;
+      font-size: 48px;
       padding: 10px;
       width: 100%;
       box-sizing: border-box;
@@ -38,6 +38,7 @@
       font-size: 32px;
       padding: 16px 32px;
       cursor: pointer;
+      width: 20em;
     }
 
     #canvasContainer {
@@ -81,6 +82,9 @@
     let pathSequence = [];
     let lastIndex = null;
     let laatsteLetter = '';
+    let letterToegevoegd = false;
+    let hasMoved = false;
+    let recentTouch = false;
 
     const patroonMap = {
       '4': 'e', '2': 'n', '6': 'a', '8': 't', '1': 'i', '3': 'r', '9': 'o', '7': 'd',
@@ -204,6 +208,7 @@
 
     function beginTekenen(x, y) {
       tekenen = true;
+      hasMoved = false;
       ctx.beginPath();
       ctx.lineWidth = 6;
       ctx.strokeStyle = 'red';
@@ -212,10 +217,12 @@
       lastIndex = getGridIndex(x, y);
       pathSequence.push(lastIndex);
       laatsteLetter = '';
+      letterToegevoegd = false;
     }
 
     function tekenLijn(x, y) {
       if (!tekenen) return;
+      hasMoved = true;
       ctx.lineTo(x, y);
       ctx.stroke();
 
@@ -234,6 +241,7 @@
           }
           textveld.value += liveLetter;
           laatsteLetter = liveLetter;
+          letterToegevoegd = true;
         }
       }
     }
@@ -243,27 +251,28 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawGrid();
 
-      let code = '';
-      if (pathSequence.length === 1) {
-        code = pathSequence[0].toString();
-      } else if (pathSequence.length >= 2) {
-        code = pathSequence.slice(-2).join('');
-      }
+      if (!letterToegevoegd && !hasMoved) {
+        let code = '';
+        if (pathSequence.length === 1) {
+          code = pathSequence[0].toString();
+        } else if (pathSequence.length >= 2) {
+          code = pathSequence.slice(-2).join('');
+        }
 
-      if (laatsteLetter) {
-        textveld.value = textveld.value.slice(0, -1);
-      }
-
-      const letter = patroonMap[code];
-      if (letter) {
-        textveld.value += letter;
+        const letter = patroonMap[code];
+        if (letter) {
+          textveld.value += letter;
+        }
       }
 
       pathSequence = [];
       laatsteLetter = '';
+      letterToegevoegd = false;
+      hasMoved = false;
     }
 
     canvas.addEventListener('mousedown', (e) => {
+      if (recentTouch) return; // fix: voorkom dubbele trigger na touch
       const pos = getCanvasPos(e);
       beginTekenen(pos.x, pos.y);
     });
@@ -277,6 +286,9 @@
     canvas.addEventListener('mouseleave', stopTekenen);
 
     canvas.addEventListener('touchstart', (e) => {
+      recentTouch = true;
+      setTimeout(() => recentTouch = false, 500); // reset vlag na korte tijd
+
       const touch = e.touches[0];
       const pos = getCanvasPos(touch);
       beginTekenen(pos.x, pos.y);
