@@ -90,7 +90,7 @@
       '4': 'e', '2': 'n', '6': 'a', '8': 't', '1': 'i', '3': 'r', '9': 'o', '7': 'd',
       '23': 's', '21': 'l', '41': 'g', '47': 'v', '63': 'h', '69': 'k', '89': 'm', '87': 'u',
       '12': 'b', '14': 'j', '32': 'z', '36': 'p', '96': 'c', '98': 'f', '78': 'w', '74': 'x',
-      '45': 'y', '65': 'q', '5': ' '
+      '45': 'y', '65': 'q', '5': ' ', '52': '?', '56': '.', '58': '!', '54': ','
     };
 
     function verstuurTekst() {
@@ -177,7 +177,6 @@
         vakLetters[startVak].push({ letter: displayChar, offset });
       }
 
-      ctx.fillStyle = 'black';
       ctx.font = `${Math.min(sectionWidth, sectionHeight) * 0.15}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -187,6 +186,8 @@
         const entries = vakLetters[vak];
 
         for (let entry of entries) {
+          const isCentered = entry.offset.x === 0 && entry.offset.y === 0;
+          ctx.fillStyle = isCentered ? 'red' : 'black';
           ctx.fillText(entry.letter, midden.x + entry.offset.x, midden.y + entry.offset.y);
         }
       }
@@ -272,7 +273,7 @@
     }
 
     canvas.addEventListener('mousedown', (e) => {
-      if (recentTouch) return; // fix: voorkom dubbele trigger na touch
+      if (recentTouch) return;
       const pos = getCanvasPos(e);
       beginTekenen(pos.x, pos.y);
     });
@@ -287,7 +288,7 @@
 
     canvas.addEventListener('touchstart', (e) => {
       recentTouch = true;
-      setTimeout(() => recentTouch = false, 500); // reset vlag na korte tijd
+      setTimeout(() => recentTouch = false, 500);
 
       const touch = e.touches[0];
       const pos = getCanvasPos(touch);
