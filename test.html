@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <title>Canvas Richting Letters - Met Backspace</title>
+  <title>Canvas Richting Letters - Fade Trail</title>
   <style>
     html, body {
       margin: 0;
@@ -44,14 +44,14 @@
     }
 
     #canvasContainer {
-      position: relative;
-      height: 33.33vh;
-      flex-shrink: 0;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      height: 40vh;
+      z-index: 10;
     }
 
     canvas {
-      position: absolute;
-      bottom: 0;
       width: 100%;
       height: 100%;
       background-color: #f0f0f0;
@@ -65,10 +65,10 @@
   <div id="controls">
     <input type="text" id="textveld" placeholder="Tekst...">
     <div id="buttons">
-        <button onclick="wisselPatroon()">Leestekens/Cijfers</button>
-        <button onclick="toggleCaps()" id="capsBtn">Caps: Uit</button>
-        <button onclick="verstuurTekst()">Verstuur</button>
-        <button onclick="verwijderLaatste()">← backspace</button>
+      <button onclick="wisselPatroon()">Leestekens/Cijfers</button>
+      <button onclick="toggleCaps()" id="capsBtn">Caps: Uit</button>
+      <button onclick="verstuurTekst()">Verstuur</button>
+      <button onclick="verwijderLaatste()">← backspace</button>
     </div>
   </div>
 
@@ -92,6 +92,9 @@
     let recentTouch = false;
     let huidigPatroonMap = 'letters';
     let capsAan = false;
+    let segments = [];
+
+    const FADE_DURATION = 1000;
 
     const patroonMapLetters = {
       '4': 'e', '2': 'n', '6': 'a', '8': 't', '1': 'i', '3': 'r', '9': 'o', '7': 'd',
@@ -101,33 +104,11 @@
     };
 
     const patroonMapSymbolen = {
-    '1': '1', '2': '2', '3': '3',
-    '4': '4', '5': '5', '6': '6',
-    '7': '7', '8': '8', '9': '9',
-    '12': '0',
-    '14': '@',
-    '21': '(',
-    '23': ')',
-    '25': '[',
-    '32': '+',
-    '36': '-',
-    '41': ':',
-    '45': '"',
-    '47': ';',
-    '52': '?',
-    '54': ',',
-    '56': '.',
-    '58': '!',
-    '63': '&',
-    '65': "'",
-    '69': '#',
-    '74': '%',
-    '78': '/', 
-    '87': '{',
-    '89': '}',
-    '85': ']',
-    '96': '=',
-    '98': '\\'
+      '1': '1', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7', '8': '8', '9': '9',
+      '12': '0', '14': '@', '21': '(', '23': ')', '25': '[', '32': '+', '36': '-',
+      '41': ':', '45': '"', '47': ';', '52': '?', '54': ',', '56': '.', '58': '!',
+      '63': '&', '65': "'", '69': '#', '74': '%', '78': '/', '87': '{', '89': '}', '85': ']',
+      '96': '=', '98': '\\'
     };
 
     function huidigeMap() {
@@ -155,18 +136,17 @@
     }
 
     function resizeCanvas() {
-      const container = document.getElementById('canvasContainer');
-      canvas.width = container.clientWidth;
-      canvas.height = container.clientHeight;
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+      sectionWidth = canvas.width / 3;
+      sectionHeight = canvas.height / 3;
       drawGrid();
     }
 
     function drawGrid() {
-      sectionWidth = canvas.width / 3;
-      sectionHeight = canvas.height / 3;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = '#cccccc';
+      ctx.fillStyle = '#f0f0f0';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#ccc';
       ctx.lineWidth = 1;
 
       for (let i = 1; i < 3; i++) {
@@ -182,30 +162,6 @@
       }
 
       drawLetters();
-    }
-
-    function getVakMidden(vakIndex) {
-      const col = (vakIndex - 1) % 3;
-      const row = Math.floor((vakIndex - 1) / 3);
-      return {
-        x: col * sectionWidth + sectionWidth / 2,
-        y: row * sectionHeight + sectionHeight / 2
-      };
-    }
-
-    function getRichtingOffset(from, to) {
-      const fx = (from - 1) % 3;
-      const fy = Math.floor((from - 1) / 3);
-      const tx = (to - 1) % 3;
-      const ty = Math.floor((to - 1) / 3);
-
-      const dx = tx - fx;
-      const dy = ty - fy;
-
-      return {
-        x: dx * sectionWidth * 0.25,
-        y: dy * sectionHeight * 0.25
-      };
     }
 
     function drawLetters() {
@@ -229,7 +185,7 @@
         vakLetters[startVak].push({ letter: displayChar, offset });
       }
 
-      ctx.font = `${Math.min(sectionWidth, sectionHeight) * 0.15}px sans-serif`;
+      ctx.font = `${Math.min(sectionWidth, sectionHeight) * 0.25}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
@@ -239,45 +195,55 @@
 
         for (let entry of entries) {
           const isCentered = entry.offset.x === 0 && entry.offset.y === 0;
-          ctx.fillStyle = isCentered ? 'red' : 'black';
-          ctx.fillText(entry.letter, midden.x + entry.offset.x, midden.y + entry.offset.y);
+          ctx.fillStyle = 'black';
+          let pushOutFactor = (vak !== 5) ? 1.3 : 1.2;
+const adjustedX = midden.x + entry.offset.x * pushOutFactor;
+const adjustedY = midden.y + entry.offset.y * pushOutFactor;
+ctx.fillText(entry.letter, adjustedX, adjustedY);
         }
       }
     }
 
-    function getGridIndex(x, y) {
-      const col = Math.floor(x / sectionWidth);
-      const row = Math.floor(y / sectionHeight);
-      return row * 3 + col + 1;
+    function getVakMidden(index) {
+      const col = (index - 1) % 3;
+      const row = Math.floor((index - 1) / 3);
+      return {
+        x: col * sectionWidth + sectionWidth / 2,
+        y: row * sectionHeight + sectionHeight / 2
+      };
     }
 
-    function getCanvasPos(e) {
-      const rect = canvas.getBoundingClientRect();
+    function getRichtingOffset(from, to) {
+      const fx = (from - 1) % 3;
+      const fy = Math.floor((from - 1) / 3);
+      const tx = (to - 1) % 3;
+      const ty = Math.floor((to - 1) / 3);
+
+      const dx = tx - fx;
+      const dy = ty - fy;
+
       return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
+        x: dx * sectionWidth * 0.25,
+        y: dy * sectionHeight * 0.25
       };
     }
 
     function beginTekenen(x, y) {
       tekenen = true;
       hasMoved = false;
-      ctx.beginPath();
-      ctx.lineWidth = 6;
-      ctx.strokeStyle = 'red';
-      ctx.moveTo(x, y);
       pathSequence = [];
       lastIndex = getGridIndex(x, y);
       pathSequence.push(lastIndex);
       laatsteLetter = '';
       letterToegevoegd = false;
+      ctx.__lastPos = { x, y };
     }
 
     function tekenLijn(x, y) {
       if (!tekenen) return;
-      hasMoved = true;
-      ctx.lineTo(x, y);
-      ctx.stroke();
+
+      const now = Date.now();
+      segments.push({ x1: ctx.__lastPos.x, y1: ctx.__lastPos.y, x2: x, y2: y, time: now });
 
       const index = getGridIndex(x, y);
       if (index !== lastIndex) {
@@ -301,12 +267,14 @@
           letterToegevoegd = true;
         }
       }
+
+      ctx.__lastPos = { x, y };
+      hasMoved = true;
     }
 
     function stopTekenen() {
       tekenen = false;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawGrid();
+      ctx.__lastPos = null;
 
       if (!letterToegevoegd && !hasMoved) {
         let code = '';
@@ -330,6 +298,31 @@
       laatsteLetter = '';
       letterToegevoegd = false;
       hasMoved = false;
+    }
+
+    function getGridIndex(x, y) {
+      const col = Math.floor(x / sectionWidth);
+      const row = Math.floor(y / sectionHeight);
+      return row * 3 + col + 1;
+    }
+
+    function render() {
+      drawGrid();
+      const now = Date.now();
+      segments = segments.filter(seg => now - seg.time < FADE_DURATION);
+
+      for (const seg of segments) {
+        const age = now - seg.time;
+        const alpha = 1 - age / FADE_DURATION;
+        ctx.strokeStyle = `rgba(255,0,0,${alpha})`;
+        ctx.lineWidth = 10;
+        ctx.beginPath();
+        ctx.moveTo(seg.x1, seg.y1);
+        ctx.lineTo(seg.x2, seg.y2);
+        ctx.stroke();
+      }
+
+      requestAnimationFrame(render);
     }
 
     canvas.addEventListener('mousedown', (e) => {
@@ -363,7 +356,17 @@
 
     canvas.addEventListener('touchend', stopTekenen);
     window.addEventListener('resize', resizeCanvas);
+
+    function getCanvasPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+    }
+
     resizeCanvas();
+    render();
   </script>
 </body>
 </html>
