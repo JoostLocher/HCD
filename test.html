@@ -292,9 +292,14 @@
     let activeCharElements = [];
     let currentlySelectedChar = null;
     let characterHighlightTimeout = null;
+    let startTime = null;
+    let startPosition = null;
+    let isTap = true;
+    let moveThreshold = 10; // pixels of movement allowed for a tap
 
     const FADE_DURATION = 500;
     const HIGHLIGHT_DURATION = 500;
+    const TAP_DURATION = 300; // milliseconds to count as a tap
 
     const patroonMapLetters = {
       '4': 'e', '2': 'n', '6': 'a', '8': 't', '1': 'i', '3': 'r', '9': 'o', '7': 'd',
@@ -400,6 +405,11 @@
       lastThreeCells = [lastIndex];
       highlightGridCells();
       
+      // For tap detection
+      startTime = Date.now();
+      startPosition = { x, y };
+      isTap = true;
+      
       // Clear previous character highlight when starting a new gesture
       clearCharHighlights();
       clearTimeout(characterHighlightTimeout);
@@ -409,6 +419,16 @@
       if (!tekenen) return;
       const now = Date.now();
       segments.push({ x1: ctx.__lastPos.x, y1: ctx.__lastPos.y, x2: x, y2: y, time: now });
+
+      // Check if this is still a tap (within movement threshold)
+      if (isTap) {
+        const dx = x - startPosition.x;
+        const dy = y - startPosition.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance > moveThreshold) {
+          isTap = false;
+        }
+      }
 
       const index = getGridIndex(x, y);
       if (index !== lastIndex) {
@@ -474,12 +494,19 @@
     }
 
     function stopTekenen() {
-      tekenen = false;
-      ctx.__lastPos = null;
-
-      if (!letterToegevoegd && !hasMoved) {
-        let code = pathSequence.length === 1 ? pathSequence[0].toString() : pathSequence.slice(-2).join('');
+      if (!tekenen) return;
+      
+      const endTime = Date.now();
+      const tapDuration = endTime - startTime;
+      
+      // Check if this was a tap (short duration and minimal movement)
+      const wasQuickTap = isTap && tapDuration < TAP_DURATION;
+      
+      if (wasQuickTap || (!letterToegevoegd && !hasMoved)) {
+        // This was a tap or a very short movement
+        const code = pathSequence[0].toString();
         let letter = (huidigPatroonMap === 'letters' ? patroonMapLetters : patroonMapSymbolen)[code];
+        
         if (letter) {
           if (capsAan && /^[a-z]$/.test(letter)) {
             letter = letter.toUpperCase();
@@ -497,6 +524,9 @@
         }
       }
 
+      tekenen = false;
+      ctx.__lastPos = null;
+
       const allCells = document.querySelectorAll('.grid-cell');
       allCells.forEach(cell => cell.style.backgroundColor = '');
       lastThreeCells = [];
@@ -505,6 +535,9 @@
       laatsteLetter = '';
       letterToegevoegd = false;
       hasMoved = false;
+      startTime = null;
+      startPosition = null;
+      isTap = true;
     }
 
     function getGridIndex(x, y) {
