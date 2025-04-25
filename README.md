@@ -52,7 +52,7 @@ Deze week stond in het teken van het bouwen van een eerste functioneel prototype
 
 ![Prototype 1](image.png)
 
-**Prototype-functionaliteit:**
+### Prototype-functionaliteit:
 Een raster met 9 vlakken, waarbij bij een tik op een vlak de middelste (rode) letter wordt getypt. Wanneer je van een vlak naar een aangrenzend vlak swipet, wordt de letter uit het beginvlak getypt. De code kijkt hierbij naar de laatste twee vlakken waar de gebruiker is geweest, zodat je – als je uitschiet en het scherm nog niet hebt losgelaten – terug kunt swipen naar het beginvlak. 
 
 De rode tapletters zijn de meest gebruikte letters in de Nederlandse taal, omdat tappen nu eenmaal makkelijker is dan swipen.
@@ -61,7 +61,7 @@ De rode tapletters zijn de meest gebruikte letters in de Nederlandse taal, omdat
 
 ![alt text](WhatsAppVideo2025-04-16at15.26.04-ezgif.com-video-to-gif-converter.gif)
 
-**Testresultaten:**
+### Testresultaten:
 - Gebruik in begin niet goed te begrijpen maar daarna "Als je het eenmaal weet is het logisch"
 - Letters waren te klein, vooral sommige leestekens  
 - Bij langdurig swipen bleef er een lange lijn staan die visueel de letters blokkeerde  
@@ -84,14 +84,14 @@ Door deze schommeling, het gebruik van je pinkvinger en het laten vasthouden van
  
 ![prototype 2](image-1.png)
 
-**Aangepast:**
+### Aangepast:
 - Raster naar beneden gehaald
 - Letter groote verhoogd
 - Swipe lijn met een fade-out
 
 ![test 2 gif](WhatsAppVideo2025-04-25at13.15.44-ezgif.com-video-to-gif-converter.gif)
 
-**Testresultaten:**
+### Testresultaten:
 - Tekstvlak en knoppen ook naar beneden verplaatsen  
 - Je kunt niet snel veel verwijderen, omdat het dan als een double tap wordt gezien en de telefoon inzoomt  
 - Nog duidelijker weergeven welke letter gekozen wordt  
@@ -115,7 +115,7 @@ Over het algemeen ben ik tevreden met het laatste prototype en heb ik positieve 
 
 ![alt text](image-3.png)
 
-**Aangepast:**
+### Aangepast:
 - Beter leesbaar font toegevoegd (bijv. beter verschil tussen hoofdletter i en kleine letter l)  
 - Knoppen vergroot en naar beneden geplaatst  
 - Swipe-lijn fade-out korter gemaakt  
@@ -123,7 +123,7 @@ Over het algemeen ben ik tevreden met het laatste prototype en heb ik positieve 
 - Functie toegevoegd om letters te schalen en blauw te kleuren als ze actief zijn  
 - Blauwe vlakken voor de laatste twee vakken beter weergegeven  
 
-**Testresultaten:**
+### Testresultaten:
 - Letter­schaling was prettig, maar wordt soms geblokkeerd door de stylus  
 - Blauwe vlakken waren een goede toevoeging  
 - Verstuurknop mag beter vervangen worden door een ‘tekst kopiëren’-knop  
